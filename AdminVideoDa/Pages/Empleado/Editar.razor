@@ -1,5 +1,92 @@
-﻿<h3>Editar</h3>
+﻿@page "/empleado/editar/{id:int}"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService _localStorageService
+
+<MudText Typo="Typo.h2" Class="ml">Editar Empleado</MudText>
+
+<MudGrid>
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            <EditForm Model="empleado" OnValidSubmit="OnValidSubmit">
+                <DataAnnotationsValidator />
+                <MudCard>
+                    <MudCardContent>
+                        <MudTextField Label="Nombre" @bind-Value="empleado.Nombre" For="@(() => empleado.Nombre)" />
+                        <MudTextField Label="Apellido" @bind-Value="empleado.Apellido" For="@(() => empleado.Apellido)" />
+                        <MudTextField Label="Edad" @bind-Value="empleado.Edad" For="@(() => empleado.Edad)" />
+                        <MudTextField Label="Telefono" @bind-Value="empleado.Telefono" For="@(() => empleado.Telefono)" />
+                        <MudTextField Label="Dui" @bind-Value="empleado.Dui" For="@(() => empleado.Dui)" />
+                        <MudTextField Label="Telefono" @bind-Value="empleado.Correo" For="@(() => empleado.Correo)" />
+                        <MudTextField Label="Telefono" @bind-Value="empleado.Direccion" For="@(() => empleado.Direccion)" />
+                        <MudTextField Label="Telefono" @bind-Value="empleado.Departamento" For="@(() => empleado.Departamento)" />
+                        <MudSelect Variant="Variant.Outlined" Label="Rol" AnchorOrigin="Origin.BottomCenter"
+                        @bind-Value="empleado.IdRol" For="@(() => empleado.IdRol)">
+                            @foreach (var item in roles)
+                            {
+                                <MudSelectItem Value="@item.Id">@item.Nombre</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Guardar cambios</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </EditForm>
+            @if (showLeaveAlert)
+            {
+                <MudAlert Severity="Severity.Error" ContentAlignment="HorizontalAlignment.Center" ShowCloseIcon="true" CloseIconClicked="(() => CloseMe(true))">No se pudo guardar.</MudAlert>
+            }
+        </MudPaper>
+    </MudItem>
+</MudGrid>
 
 @code {
+    [Parameter]
+    public int id { get; set; }
 
+    private IEnumerable<Rol>? roles = new List<Rol>();
+    private bool showLeaveAlert = false;
+    Empleado? empleado = new Empleado();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Http.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", await _localStorageService.GetItemAsync<string>("token"));
+
+        var resp = await Http.GetStringAsync("empleado/" + id);
+        empleado = JsonSerializer.Deserialize<Empleado>(resp, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        await getRoles();
+    }
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        await saveChanges();
+    }
+
+    private async Task saveChanges()
+    {
+        var httpResponse = await Http.PutAsJsonAsync<Empleado>("empleado/" + empleado.Id, empleado);
+
+        if (!(httpResponse.StatusCode == System.Net.HttpStatusCode.OK))
+        {
+            showLeaveAlert = true;
+        }
+        else
+        {
+            NavigationManager.NavigateTo("empleado/index");
+        }
+    }
+
+    private void CloseMe(bool value)
+    {
+        showLeaveAlert = false;
+    }
+
+    private async Task getRoles()
+    {
+        var httpResponse = await Http.GetStringAsync("rol");
+        roles = JsonSerializer.Deserialize<IEnumerable<Rol>>(httpResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    }
 }
