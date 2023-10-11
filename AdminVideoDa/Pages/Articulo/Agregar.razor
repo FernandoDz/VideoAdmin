@@ -1,0 +1,82 @@
+﻿@page "/articulo/agregar"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService _localStorageService
+
+<MudText Typo="Typo.h2" Class="ml">Nuevo Articulo</MudText>
+
+<MudGrid>
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            <EditForm Model="articulo" OnValidSubmit="OnValidSubmit">
+                <DataAnnotationsValidator />
+                <MudCard>
+                    <MudCardContent>
+                        <MudTextField Label="Nombre" @bind-Value="articulo.Nombre" For="@(() => articulo.Nombre)" />
+                        <MudTextField Label="Imagen" @bind-Value="articulo.Imagen" For="@(() => articulo.Imagen)" />
+                        <MudTextField Label="Precio" @bind-Value="articulo.Precio" For="@(() => articulo.Precio)" />
+                        <MudTextField Label="Descripcion" @bind-Value="articulo.Descripcion" For="@(() => articulo.Descripcion)" />
+
+                        <MudSelect Variant="Variant.Outlined" Label="Consola" AnchorOrigin="Origin.BottomCenter"
+                        @bind-Value="articulo.IdConsola" For="@(() => articulo.IdConsola)">
+                            @foreach (var item in consolas)
+                            {
+                                <MudSelectItem Value="@item.Id">@item.Nombre</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Guardar</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </EditForm>
+            @if (showLeaveAlert)
+            {
+                <MudAlert Severity="Severity.Error" ContentAlignment="HorizontalAlignment.Center" ShowCloseIcon="true" CloseIconClicked="(() => CloseMe(true))">No se pudo guardar.</MudAlert>
+            }
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private IEnumerable<Consola> consolas = new List<Consola>();
+    private bool showLeaveAlert = false;
+    Articulo articulo = new Articulo();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Http.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", await _localStorageService.GetItemAsync<string>("token"));
+        await getConsolas();
+    }
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        await save();
+    }
+
+    private async Task save()
+    {
+        var httpResponse = await Http.PostAsJsonAsync<Articulo>("articulo", articulo);
+
+        if (!(httpResponse.StatusCode == System.Net.HttpStatusCode.OK))
+        {
+            showLeaveAlert = true;
+        }
+        else
+        {
+            NavigationManager.NavigateTo("articulo/index");
+        }
+    }
+
+    private void CloseMe(bool value)
+    {
+        showLeaveAlert = false;
+    }
+
+    private async Task getConsolas()
+    {
+        var httpResponse = await Http.GetStringAsync("consola");
+        consolas = JsonSerializer.Deserialize<IEnumerable<Consola>>(httpResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    }
+}
