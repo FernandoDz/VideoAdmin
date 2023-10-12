@@ -1,5 +1,74 @@
-﻿<h3>Editar</h3>
+﻿@page "/consola/editar/{id:int}"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService _localStorageService
+
+<MudText Typo="Typo.h2" Class="ml">Editar Consola</MudText>
+
+<MudGrid>
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            <EditForm Model="consola" OnValidSubmit="OnValidSubmit">
+                <DataAnnotationsValidator />
+                <MudCard>
+                    <MudCardContent>
+                        <MudTextField Label="Nombre" @bind-Value="consola.Nombre" For="@(() => consola.Nombre)" />
+                        <MudTextField Label="Descripcion" @bind-Value="consola.Descripcion" For="@(() => consola.Descripcion)" />
+                        <MudTextField Label="Serie" @bind-Value="consola.Serie" For="@(() => consola.Serie)" />
+                        <MudTextField Label="Imagen" @bind-Value="consola.Imagen" For="@(() => consola.Imagen)" />
+                        <MudTextField Label="Fabricante" @bind-Value="consola.Fabricante" For="@(() => consola.Fabricante)" />
+                        <MudTextField Label="Precio" @bind-Value="consola.Precio" For="@(() => consola.Precio)" />
+                        <MudTextField Label="AñodeLanzamiento" @bind-Value="consola.AñodeLanzamiento" For="@(() => consola.AñodeLanzamiento)" />
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Guardar cambios</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </EditForm>
+            @if (showLeaveAlert)
+            {
+                <MudAlert Severity="Severity.Error" ContentAlignment="HorizontalAlignment.Center" ShowCloseIcon="true" CloseIconClicked="(() => CloseMe(true))">No se pudo guardar.</MudAlert>
+            }
+        </MudPaper>
+    </MudItem>
+</MudGrid>
 
 @code {
+    [Parameter]
+    public int id { get; set; }
+    private bool showLeaveAlert = false;
+    Consola consola = new Consola();
 
+    protected override async Task OnInitializedAsync()
+    {
+        Http.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", await _localStorageService.GetItemAsync<string>("token"));
+        var resp = await Http.GetStringAsync("consola/" + id);
+        consola = JsonSerializer.Deserialize<Consola>(resp, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    }
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        await saveChanges();
+    }
+
+    private async Task saveChanges()
+    {
+
+        var httpResponse = await Http.PutAsJsonAsync<Consola>("consola/" + consola.Id, consola);
+
+        if (!(httpResponse.StatusCode == System.Net.HttpStatusCode.OK))
+        {
+            showLeaveAlert = true;
+        }
+        else
+        {
+            NavigationManager.NavigateTo("consola/index");
+        }
+    }
+
+    private void CloseMe(bool value)
+    {
+        showLeaveAlert = false;
+    }
 }

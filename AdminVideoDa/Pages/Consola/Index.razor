@@ -1,5 +1,66 @@
 ﻿@page "/consola/index"
+@inject HttpClient httpClient
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService _localStorageService
+
+<MudText style="margin:10px;" Typo="Typo.h2" Class="ml">Consolas</MudText>
+
+<MudTable style="margin:10px;" Items="@consolas" Dense="true" Hover="true" Bordered="true" Striped="true">
+    <ToolBarContent>
+        <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="goAdd" />
+        <MudSpacer />
+        <MudTextField @bind-Value="searchText" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>Nombre</MudTh>
+        <MudTh>Descripcion</MudTh>
+        <MudTh>Serie</MudTh>
+        <MudTh>Imagen</MudTh>
+        <MudTh>Fabricante</MudTh>
+        <MudTh>Precio</MudTh>
+        <MudTh>AñodeLanzamiento</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Nombre">@context.Nombre</MudTd>
+        <MudTd DataLabel="Descripcion">@context.Descripcion</MudTd>
+        <MudTd DataLabel="Serie">@context.Serie</MudTd>
+        <MudTd DataLabel="Imagen">@context.Imagen</MudTd>
+        <MudTd DataLabel="Fabricante">@context.Fabricante</MudTd>
+        <MudTd DataLabel="Precio">@context.Precio</MudTd>
+        <MudTd DataLabel="AñodeLanzamiento">@context.AñodeLanzamiento</MudTd>
+        <MudTd>
+            <MudButton Link="@($"/consola/editar/{context.Id}")" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary"
+                       Class="text-center">Editar</MudButton>
+            <MudButton Link="@($"/consola/eliminar/{context.Id}")" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
+                       Class="text-center">Eliminar</MudButton>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
 
 @code {
+    private IEnumerable<Consola> consolas = new List<Consola>();
+    private string searchText = "";
 
+    protected override async Task OnInitializedAsync()
+    {
+        httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", await _localStorageService.GetItemAsync<string>("token"));
+        await getAll();
+    }
+
+    private async Task getAll()
+    {
+        var httpResponse = await httpClient.GetStringAsync("consolas");
+        consolas = JsonSerializer.Deserialize<IEnumerable<Consola>>(httpResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    }
+
+    private void goAdd()
+    {
+        NavigationManager.NavigateTo("consola/agregar");
+    }
 }
