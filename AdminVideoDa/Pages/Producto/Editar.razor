@@ -1,5 +1,109 @@
 ﻿<h3>Editar</h3>
 
-@code {
+@page "/producto/editar/{id:int}"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService _localStorageService
 
+<MudText Typo="Typo.h2" Class="ml">Editar Usuario</MudText>
+
+<MudGrid>
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            <EditForm Model="producto" OnValidSubmit="OnValidSubmit">
+                <DataAnnotationsValidator />
+                <MudCard>
+                    <MudCardContent>
+                        <MudTextField Label="Nombre" @bind-Value="producto.Nombre" For="@(() => producto.Nombre)" />
+                        <MudTextField Label="Descripcion" @bind-Value="producto.Descripcion" For="@(() => producto.Nombre)" />
+                        <MudTextField Label="Cantidad" @bind-Value="producto.Cantidad" For="@(() => producto.Cantidad)" />
+                        <MudTextField Label="Imagen" @bind-Value="producto.Imagen" For="@(() => producto.Imagen)" />
+                        <MudTextField Label="Precio" @bind-Value="producto.Precio" For="@(() => producto.Precio)" />
+                        
+                        <MudSelect Variant="Variant.Outlined" Label="Categoria" AnchorOrigin="Origin.BottomCenter"
+                        @bind-Value="producto.IdCategoria" For="@(() => producto.IdCategoria)">
+                            @foreach (var item in categorias)
+                            {
+                                <MudSelectItem Value="@item.Id">@item.Nombre</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudSelect Variant="Variant.Outlined" Label="Consola" AnchorOrigin="Origin.BottomCenter"
+                        @bind-Value="producto.IdConsola" For="@(() => producto.IdConsola)">
+                            @foreach (var item in consolas)
+                            {
+                                <MudSelectItem Value="@item.Id">@item.Nombre</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Guardar cambios</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </EditForm>
+            @if (showLeaveAlert)
+            {
+                <MudAlert Severity="Severity.Error" ContentAlignment="HorizontalAlignment.Center" ShowCloseIcon="true" CloseIconClicked="(() => CloseMe(true))">No se pudo guardar.</MudAlert>
+            }
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+
+    private IEnumerable<Consola>? consolas = new List<Consola>();
+    private IEnumerable<Categoria>? categorias = new List<Categoria>();
+    private bool showLeaveAlert = false;
+    Producto? producto = new Producto();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Http.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", await _localStorageService.GetItemAsync<string>("token"));
+
+        var resp = await Http.GetStringAsync("producto/" + id);
+        producto = JsonSerializer.Deserialize<Producto>(resp, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        await getConsola();
+        await getCategoria();
+
+    }
+
+
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        await saveChanges();
+    }
+
+    private async Task saveChanges()
+    {
+        var httpResponse = await Http.PutAsJsonAsync<Producto>("producto/" + producto.Id, producto);
+
+        if (!(httpResponse.StatusCode == System.Net.HttpStatusCode.OK))
+        {
+            showLeaveAlert = true;
+        }
+        else
+        {
+            NavigationManager.NavigateTo("usuario/index");
+        }
+    }
+
+    private void CloseMe(bool value)
+    {
+        showLeaveAlert = false;
+    }
+
+    private async Task getConsola()
+    {
+        var httpResponse = await Http.GetStringAsync("consola");
+        consolas = JsonSerializer.Deserialize<IEnumerable<Consola>>(httpResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    }
+    private async Task getCategoria()
+    {
+        var httpResponse = await Http.GetStringAsync("categoria");
+        categorias = JsonSerializer.Deserialize<IEnumerable<Categoria>>(httpResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    }
 }
