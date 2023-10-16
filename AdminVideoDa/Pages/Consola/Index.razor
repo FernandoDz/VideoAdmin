@@ -55,7 +55,7 @@
 
     private async Task getAll()
     {
-        var httpResponse = await httpClient.GetStringAsync("consolas");
+        var httpResponse = await httpClient.GetStringAsync("consola");
         consolas = JsonSerializer.Deserialize<IEnumerable<Consola>>(httpResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
     }
 
