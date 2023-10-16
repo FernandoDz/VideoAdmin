@@ -15,19 +15,14 @@
         <MudTh>Id</MudTh>
         <MudTh>Nombre</MudTh>
         <MudTh>Descripcion</MudTh>
-        <MudTh>Categoria</MudTh>
-        <MudTh>Cantidad</MudTh>
         <MudTh>Precio</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Id">@context.Id</MudTd>
         <MudTd DataLabel="Nombre">@context.Nombre</MudTd>
         <MudTd DataLabel="Descripcion">@context.Descripcion</MudTd>
-        <MudTd DataLabel="Cantidad">@context.Cantidad</MudTd>
-        <MudTd DataLabel="Imagen">@context.Imagen</MudTd>
         <MudTd DataLabel="Precio">@context.Precio</MudTd>
-        <MudTd DataLabel="Categoria">@context.IdCategoria</MudTd>
-        <MudTd DataLabel="Consola">@context.IdConsola</MudTd>
+       
 
         <MudTd>
             <MudButton Link="@($"/producto/editar/{context.Id}")" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary"
