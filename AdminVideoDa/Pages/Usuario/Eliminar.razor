@@ -21,7 +21,7 @@
             </EditForm>
             @if (showLeaveAlert)
             {
-                <MudAlert Severity="Severity.Error" ContentAlignment="HorizontalAlignment.Center" ShowCloseIcon="true" CloseIconClicked="(() => CloseMe(true))">Ocurrió un problema.</MudAlert>
+                <MudAlert Severity="Severity.Error" ContentAlignment="HorizontalAlignment.Center" ShowCloseIcon="true" CloseIconClicked="(() => CloseMe(true))">No se pudo guardar.</MudAlert>
             }
         </MudPaper>
     </MudItem>
@@ -30,25 +30,29 @@
 @code {
     [Parameter]
     public int id { get; set; }
+
+    private IEnumerable<Rol>? roles = new List<Rol>();
     private bool showLeaveAlert = false;
-    Usuario usuario = new Usuario();
+    UsuarioEdit usuario = new UsuarioEdit();
 
     protected override async Task OnInitializedAsync()
     {
         Http.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", await _localStorageService.GetItemAsync<string>("token"));
+
         var resp = await Http.GetStringAsync("usuario/" + id);
-        usuario = JsonSerializer.Deserialize<Usuario>(resp, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        usuario = JsonSerializer.Deserialize<UsuarioEdit>(resp, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        await getRoles();
     }
 
     private async Task OnValidSubmit(EditContext context)
     {
-        await eliminar();
+        await saveChanges();
     }
 
-    private async Task eliminar()
+    private async Task saveChanges()
     {
-
         var httpResponse = await Http.DeleteAsync("usuario/" + usuario.Id);
 
         if (!(httpResponse.StatusCode == System.Net.HttpStatusCode.OK))
@@ -64,5 +68,11 @@
     private void CloseMe(bool value)
     {
         showLeaveAlert = false;
+    }
+
+    private async Task getRoles()
+    {
+        var httpResponse = await Http.GetStringAsync("rol");
+        roles = JsonSerializer.Deserialize<IEnumerable<Rol>>(httpResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
     }
 }

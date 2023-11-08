@@ -9,7 +9,8 @@
     <ToolBarContent>
         <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="goAdd" />
         <MudSpacer />
-        <MudTextField @bind-Value="searchText" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        <MudIconButton Icon="@Icons.Material.Filled.Search" Edge="Edge.Start" OnClick="Search" Style="margin-top:5px" />
+        <MudTextField @bind-Value="searchText" Placeholder="Search" Adornment="Adornment.Start" @onkeydown="HandleKeyPress"></MudTextField>
     </ToolBarContent>
     <HeaderContent>
         <MudTh>Id</MudTh>
@@ -20,9 +21,9 @@
         <MudTd DataLabel="Id">@context.Id</MudTd>
         <MudTd DataLabel="Nombre">@context.Nombre</MudTd>
         <MudTd>
-            <MudButton Link="@($"/categoria/editar/{context.Id}")" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary"
+            <MudButton Href="@($"/categoria/editar/{context.Id}")" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary"
                        Class="text-center">Editar</MudButton>
-            <MudButton Link="@($"/categoria/eliminar/{context.Id}")" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
+            <MudButton Href="@($"/categoria/eliminar/{context.Id}")" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
                        Class="text-center">Eliminar</MudButton>
         </MudTd>
     </RowTemplate>
@@ -34,12 +35,21 @@
 @code {
     private IEnumerable<Categoria> categorias = new List<Categoria>();
     private string searchText = "";
+    private Categoria categoria = new Categoria();
 
     protected override async Task OnInitializedAsync()
     {
         httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", await _localStorageService.GetItemAsync<string>("token"));
         await getAll();
+    }
+
+    private async Task Search()
+    {
+        var httpResponse = await httpClient.PostAsJsonAsync("categoria/buscar", categoria);
+        string respString = await httpResponse.Content.ReadAsStringAsync();
+        categorias = JsonSerializer.Deserialize<IEnumerable<Categoria>>(respString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+            .Where(c => c.Nombre.Equals(searchText, StringComparison.OrdinalIgnoreCase));
     }
 
     private async Task getAll()
@@ -51,5 +61,12 @@
     private void goAdd()
     {
         NavigationManager.NavigateTo("categoria/agregar");
+    }
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await Search();
+        }
     }
 }

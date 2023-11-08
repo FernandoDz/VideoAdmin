@@ -12,14 +12,7 @@
                 <DataAnnotationsValidator />
                 <MudCard>
                     <MudCardContent>
-
-                        <MudTextField Label="Nombre" @bind-Value="consola.Nombre" For="@(() => consola.Nombre)" />
-                        <MudTextField Label="Descripcion" @bind-Value="consola.Descripcion" For="@(() => consola.Descripcion)" />
-                        <MudTextField Label="Serie" @bind-Value="consola.Serie" For="@(() => consola.Serie)" />
-                        <MudTextField Label="Imagen" @bind-Value="consola.Imagen" For="@(() => consola.Imagen)" />
-                        <MudTextField Label="Fabricante" @bind-Value="consola.Fabricante" For="@(() => consola.Fabricante)" />
-                        <MudTextField Label="Precio" @bind-Value="consola.Precio" For="@(() => consola.Precio)" />
-                        <MudTextField Label="AñodeLanzamiento" @bind-Value="consola.AñodeLanzamiento" For="@(() => consola.AñodeLanzamiento)" />
+                        <MudText style="margin:10px">¿Estas seguro de eliminar este consola?</MudText>
                     </MudCardContent>
                     <MudCardActions>
                         <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Error" Class="ml-auto">Eliminar</MudButton>
@@ -73,3 +66,4 @@
         showLeaveAlert = false;
     }
 }
+

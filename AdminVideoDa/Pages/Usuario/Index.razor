@@ -9,7 +9,8 @@
     <ToolBarContent>
         <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="goAdd" />
         <MudSpacer />
-        <MudTextField @bind-Value="searchText" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        <MudIconButton Icon="@Icons.Material.Filled.Search" Edge="Edge.Start" OnClick="Search" Style="margin-top:5px" />
+        <MudTextField @bind-Value="searchText" Placeholder="Search" Adornment="Adornment.Start"></MudTextField>
     </ToolBarContent>
     <HeaderContent>
         <MudTh>Id</MudTh>
@@ -34,9 +35,9 @@
         }
 
         <MudTd>
-            <MudButton Link="@($"/usuario/editar/{context.Id}")" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary"
+            <MudButton Href="@($"/usuario/editar/{context.Id}")" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary"
                        Class="text-center">Editar</MudButton>
-            <MudButton Link="@($"/usuario/eliminar/{context.Id}")" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
+            <MudButton Href="@($"/usuario/eliminar/{context.Id}")" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
                        Class="text-center">Eliminar</MudButton>
         </MudTd>
     </RowTemplate>
@@ -44,7 +45,9 @@
         <MudTablePager />
     </PagerContent>
 </MudTable>
-
+@* <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" OnClick="Search">
+</MudFab>
+<MudTextField @bind-Value="searchText" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField> *@
 @code {
     private IEnumerable<Usuario> usuarios = new List<Usuario>();
     private string searchText = "";
@@ -54,14 +57,19 @@
     {
         httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", await _localStorageService.GetItemAsync<string>("token"));
-        await getAll();
+       await getAll();
     }
 
-    private async Task getAll()
+    private async Task Search()
     {
         var httpResponse = await httpClient.PostAsJsonAsync("usuario/buscar", usuario);
         string respString = await httpResponse.Content.ReadAsStringAsync();
         usuarios = JsonSerializer.Deserialize<IEnumerable<Usuario>>(respString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    }
+    private async Task getAll()
+    {
+        var httpResponse = await httpClient.GetStringAsync("usuario");
+        usuarios = JsonSerializer.Deserialize<IEnumerable<Usuario>>(httpResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
     }
 
     private void goAdd()
