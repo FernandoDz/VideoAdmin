@@ -2,6 +2,7 @@
 @inject HttpClient httpClient
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService _localStorageService
+@inject IDialogService DialogService
 
 <MudText style="margin:10px;" Typo="Typo.h2" Class="ml">Categorias</MudText>
 
@@ -36,6 +37,7 @@
     private IEnumerable<Categoria> categorias = new List<Categoria>();
     private string searchText = "";
     private Categoria categoria = new Categoria();
+   
 
     protected override async Task OnInitializedAsync()
     {
@@ -43,6 +45,8 @@
             new AuthenticationHeaderValue("Bearer", await _localStorageService.GetItemAsync<string>("token"));
         await getAll();
     }
+   
+
 
     private async Task Search()
     {
@@ -69,4 +73,6 @@
             await Search();
         }
     }
+    
+    
 }

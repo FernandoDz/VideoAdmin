@@ -2,6 +2,7 @@
 @inject HttpClient httpClient
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService _localStorageService
+@inject HttpClient Http
 
 <MudText style="margin:10px;" Typo="Typo.h2" Class="ml">Usuarios</MudText>
 
@@ -16,6 +17,7 @@
         <MudTh>Id</MudTh>
         <MudTh>Nombre</MudTh>
         <MudTh>Apellido</MudTh>
+        <MudTh>Rol</MudTh>
         <MudTh>Login</MudTh>
         <MudTh>Estado</MudTh>
         <MudTh>Acciones</MudTh>
@@ -24,6 +26,9 @@
         <MudTd DataLabel="Id">@context.Id</MudTd>
         <MudTd DataLabel="Nombre">@context.Nombre</MudTd>
         <MudTd DataLabel="Apellido">@context.Apellido</MudTd>
+        <MudTd DataLabel="Rol">
+            @roles.FirstOrDefault(c => c.Id == @context.IdRol)?.Nombre
+        </MudTd>
         <MudTd DataLabel="Login">@context.Login</MudTd>
         @if (context.Estatus == 1)
         {
@@ -45,11 +50,10 @@
         <MudTablePager />
     </PagerContent>
 </MudTable>
-@* <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" OnClick="Search">
-</MudFab>
-<MudTextField @bind-Value="searchText" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField> *@
+
 @code {
     private IEnumerable<Usuario> usuarios = new List<Usuario>();
+    private IEnumerable<Rol>? roles = new List<Rol>();
     private string searchText = "";
     private Usuario usuario = new Usuario();
 
@@ -57,7 +61,8 @@
     {
         httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", await _localStorageService.GetItemAsync<string>("token"));
-       await getAll();
+        await getAll();
+        await getRoles();
     }
 
     private async Task Search()
@@ -71,7 +76,11 @@
         var httpResponse = await httpClient.GetStringAsync("usuario");
         usuarios = JsonSerializer.Deserialize<IEnumerable<Usuario>>(httpResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
     }
-
+    private async Task getRoles()
+    {
+        var httpResponse = await Http.GetStringAsync("rol");
+        roles = JsonSerializer.Deserialize<IEnumerable<Rol>>(httpResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    }
     private void goAdd()
     {
         NavigationManager.NavigateTo("usuario/agregar");

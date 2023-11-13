@@ -1,11 +1,12 @@
 ﻿@page "/producto/index"
 @inject HttpClient httpClient
+@inject HttpClient Http
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService _localStorageService
 
 <MudText style="margin:10px;" Typo="Typo.h2" Class="ml">Juegos</MudText>
 
-<MudTable  Items="@productos" Dense="true" Hover="true" Bordered="true" Striped="true">
+<MudTable Items="@productos" Dense="true" Hover="true" Bordered="true" Striped="true">
     <ToolBarContent>
         <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="goAdd" />
         <MudSpacer />
@@ -14,17 +15,25 @@
     <HeaderContent>
         <MudTh>Id</MudTh>
         <MudTh>Nombre</MudTh>
-        <MudTh>Descripcion</MudTh>
+        <MudTh>Consola</MudTh>
+        <MudTh>Categoria</MudTh>
         <MudTh>Precio</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Id">@context.Id</MudTd>
         <MudTd DataLabel="Nombre">@context.Nombre</MudTd>
-        <MudTd DataLabel="Descripcion">@context.Descripcion</MudTd>
-        <MudTd DataLabel="Precio">@context.Precio</MudTd>
+        
+        <MudTd DataLabel="Consola">
+            @consolas.FirstOrDefault(c => c.Id == @context.IdConsola)?.Nombre
+        </MudTd>
        
+        <MudTd DataLabel="Categoria">
+            @categorias.FirstOrDefault(c => c.Id == @context.IdCategoria)?.Nombre
+        </MudTd>
+        <MudTd DataLabel="Precio">@context.Precio</MudTd>
 
-        <MudTd >
+
+        <MudTd>
             <MudButton Link="@($"/producto/editar/{context.Id}")" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary"
                        Class="text-center">Editar</MudButton>
             <MudButton Link="@($"/producto/eliminar/{context.Id}")" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning"
@@ -38,6 +47,8 @@
 
 @code {
     private IEnumerable<Producto> productos = new List<Producto>();
+    private IEnumerable<Categoria>? categorias = new List<Categoria>();
+    private IEnumerable<Consola>? consolas = new List<Consola>();
     private string searchText = "";
 
     protected override async Task OnInitializedAsync()
@@ -45,12 +56,24 @@
         httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", await _localStorageService.GetItemAsync<string>("token"));
         await getAll();
+        await getCategoria();
+        await getConsola();
     }
 
     private async Task getAll()
     {
         var httpResponse = await httpClient.GetStringAsync("producto");
         productos = JsonSerializer.Deserialize<IEnumerable<Producto>>(httpResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    }
+    private async Task getCategoria()
+    {
+        var httpResponse = await Http.GetStringAsync("Categoria");
+        categorias = JsonSerializer.Deserialize<IEnumerable<Categoria>>(httpResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    }
+    private async Task getConsola()
+    {
+        var httpResponse = await Http.GetStringAsync("consola");
+        consolas = JsonSerializer.Deserialize<IEnumerable<Consola>>(httpResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
     }
 
     private void goAdd()

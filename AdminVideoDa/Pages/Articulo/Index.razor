@@ -1,5 +1,6 @@
 ﻿@page "/articulo/index"
 @inject HttpClient httpClient
+@inject HttpClient Http
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService _localStorageService
 
@@ -15,14 +16,16 @@
         <MudTh>Id</MudTh>
         <MudTh>Nombre</MudTh>
         <MudTh>Precio</MudTh>
-        <MudTh>Descripcion</MudTh>
+        <MudTh>Consola</MudTh>
         <MudTh>Acciones</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Id">@context.Id</MudTd>
         <MudTd DataLabel="Nombre">@context.Nombre</MudTd>
-        <MudTd DataLabel="Apellido">@context.Precio</MudTd>
-        <MudTd DataLabel="Descripcion">@context.Descripcion</MudTd>
+        <MudTd DataLabel="Precio">@context.Precio</MudTd>
+        <MudTd DataLabel="Consola">
+            @consolas.FirstOrDefault(c => c.Id == @context.IdConsola)?.Nombre
+        </MudTd>
        
 
         <MudTd>
@@ -39,6 +42,7 @@
 
 @code {
     private IEnumerable<Articulo> articulos = new List<Articulo>();
+    private IEnumerable<Consola>? consolas = new List<Consola>();
     private string searchText = "";
     private Articulo articulo = new Articulo();
 
@@ -47,6 +51,7 @@
         httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", await _localStorageService.GetItemAsync<string>("token"));
         await getAll();
+        await getConsola();
     }
 
     private async Task getAll()
@@ -55,7 +60,11 @@
         string respString = await httpResponse.Content.ReadAsStringAsync();
         articulos = JsonSerializer.Deserialize<IEnumerable<Articulo>>(respString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
     }
-
+    private async Task getConsola()
+    {
+        var httpResponse = await Http.GetStringAsync("consola");
+        consolas = JsonSerializer.Deserialize<IEnumerable<Consola>>(httpResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    }
     private void goAdd()
     {
         NavigationManager.NavigateTo("articulo/agregar");
