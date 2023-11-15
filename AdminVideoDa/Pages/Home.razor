@@ -1,5 +1,174 @@
 ﻿@page "/home"
-<h1 style="margin:10px;">Bienvenidos</h1>
+@inject HttpClient httpClient
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService _localStorageService
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+
+<MudContainer>
+    <div class="title-container">
+        <MudText Typo="Typo.h6" Color="Color.Primary">Bienvenido </MudText>
+        <MudText Typo="Typo.h6" Color="Color.Dark">Sistema de Administración </MudText>
+    </div>
+    <MudGrid Style="display:flex; justify-content:center; align-items:center;">
+        @foreach (var total in totales)
+        {
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <MudCard Class="my-card" Outlined="false" Elevation="3" Style="border-radius: 10px;">
+                    <MudCardContent>
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6" Color="Color.Primary">Categorías </MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudIconButton Icon="@Icons.Material.Filled.GraphicEq" Color="Color.Default" Size="Size.Large" />
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <div class="content-container">
+                            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Title="Trending" Color="Color.Success" Size="Size.Small" Class="content-icon" />
+                            <MudText Typo="Typo.body2" Class="card-value">@total.TotalCategorias</MudText>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <MudCard Class="my-card" Outlined="false" Elevation="3" Style="border-radius: 10px;">
+                    <MudCardContent>
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6" Color="Color.Primary" >Productos </MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudIconButton Icon="@Icons.Material.Filled.GraphicEq" Color="Color.Primary" Size="Size.Large" />
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <div class="content-container">
+                            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Title="Trending" Color="Color.Success" Size="Size.Small" Class="content-icon" />
+                            <MudText Typo="Typo.body2" Class="card-value">@total.TotalProductos</MudText>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <MudCard Class="my-card" Outlined="false" Elevation="3" Style="border-radius: 10px;">
+                    <MudCardContent>
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6" Color="Color.Primary" >Artículos </MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudIconButton Icon="@Icons.Material.Filled.GraphicEq" Color="Color.Secondary" Size="Size.Large" />
+                            </CardHeaderActions>
+                        </MudCardHeader>
+
+                        <div class="content-container">
+                            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Title="Trending" Size="Size.Medium" Color="Color.Success" Class="content-icon" />
+                            <MudText Typo="Typo.body2" Class="card-value">@total.TotalArticulos</MudText>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <MudCard Class="my-card" Outlined="false" Elevation="3" Style="border-radius: 10px;">
+                    <MudCardContent>
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6" Color="Color.Primary" >Consolas </MudText>
+                            </CardHeaderContent>
+
+                            <CardHeaderActions>
+                                <MudIconButton Icon="@Icons.Material.Filled.GraphicEq" Color="Color.Success" Size="Size.Large" />
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <div class="content-container">
+                            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Title="Trending" Color="Color.Success" Size="Size.Medium" Class="content-icon" />
+                            <MudText Typo="Typo.body2" Class="card-value">@total.TotalConsolas</MudText>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12">
+            
+        </MudItem>
+        
+        }
+    </MudGrid>
+    <div>
+        <canvas id="myChart"></canvas>
+    </div>
+
+    
+</MudContainer>
+
+
+
+
+<style>
+    .title-container {
+        text-align: left;
+        padding-bottom: 40px;
+    }
+
+    .my-card {
+        background-color: #fff; /* Fondo blanco */
+        border-radius: 10px; /* Borde redondeado */
+    }
+
+    .header-container {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .header-icon {
+        margin-right: 10px;
+    }
+
+    .content-container {
+        display: flex;
+        align-items: center;
+    }
+
+    .content-icon {
+        margin-right: 5px;
+    }
+</style>
+
+
 @code {
+    private List<Totales> totales = new List<Totales>();
+    protected override async Task OnInitializedAsync()
+    {
+        httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", await _localStorageService.GetItemAsync<string>("token"));
+        await getAll();
+        await JS.InvokeVoidAsync("Graficar", totales);
+
+    }
+
+
+
+    private async Task getAll()
+    {
+        try
+        {
+            var httpResponse = await httpClient.GetStringAsync("total/totales");
+            Console.WriteLine(httpResponse);
+
+            var totalesResponse = JsonSerializer.Deserialize<Totales>(httpResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            totales = new List<Totales> { totalesResponse };
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
 
 }
+
+

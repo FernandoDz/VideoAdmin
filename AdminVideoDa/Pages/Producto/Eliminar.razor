@@ -13,12 +13,7 @@
                 <DataAnnotationsValidator />
                 <MudCard>
                     <MudCardContent>
-                        <MudTextField Label="Nombre" @bind-Value="producto.Nombre" For="@(() => producto.Nombre)" />
-                        <MudTextField Label="Descripcion" @bind-Value="producto.Descripcion" For="@(() => producto.Nombre)" />
-                        <MudTextField Label="Cantidad" @bind-Value="producto.Cantidad" For="@(() => producto.Cantidad)" />
-                        <MudTextField Label="Imagen" @bind-Value="producto.Imagen" For="@(() => producto.Imagen)" />
-                        <MudTextField Label="Precio" @bind-Value="producto.Precio" For="@(() => producto.Precio)" />
-                        
+                        <MudText style="margin:10px">¿Estas seguro de eliminar este producto?</MudText>
                     </MudCardContent>
                     <MudCardActions>
                         <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Error" Class="ml-auto">Eliminar</MudButton>

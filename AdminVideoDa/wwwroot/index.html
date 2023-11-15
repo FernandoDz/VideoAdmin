@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>Admin</title>
     <base href="/" />
     <!--<link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />-->
@@ -16,8 +17,35 @@
     <!-- Importaciones de MudBlazor -->
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
-  
+
 </head>
+<script>
+    window.Graficar = async (datos) => {
+        const ctx = document.getElementById('myChart');
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Categorías', 'Productos', 'Artículos', 'Consolas'],
+                datasets: [{
+                    label: 'Disponible',
+                    data: [datos[0].totalCategorias, datos[0].totalProductos, datos[0].totalArticulos, datos[0].totalConsolas],
+                    borderWidth: 1
+                }]
+
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+</script>
+
+
 
 <body>
     <div id="app">
