@@ -10,7 +10,8 @@
     <ToolBarContent>
         <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="goAdd" />
         <MudSpacer />
-        <MudTextField @bind-Value="searchText" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        <MudIconButton Icon="@Icons.Material.Filled.Search" Edge="Edge.Start" OnClick="Search" Style="margin-top:5px" />
+        <MudTextField @bind-Value="searchText" Placeholder="Search" Adornment="Adornment.Start" @onkeydown="HandleKeyPress"></MudTextField>
     </ToolBarContent>
     <HeaderContent>
         <MudTh>Id</MudTh>
@@ -68,5 +69,42 @@
     private void goAdd()
     {
         NavigationManager.NavigateTo("articulo/agregar");
+    }
+    private async Task Search()
+    {
+        var SearchCriteria = new
+        {
+            Nombre = searchText,
+            Descripcion = searchText,
+            Precio = searchText,
+           
+        };
+        var httpResponse = await httpClient.PostAsJsonAsync("articulo/buscar", SearchCriteria);
+        string respString = await httpResponse.Content.ReadAsStringAsync();
+        var allArticulos = JsonSerializer.Deserialize<IEnumerable<Articulo>>(respString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        var matchingArticulos = allArticulos
+             .Where(c => c.Nombre.Contains(searchText, StringComparison.OrdinalIgnoreCase) || c.Descripcion.Contains(searchText, StringComparison.OrdinalIgnoreCase) || c.Precio.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+            .Take(5)
+            .ToList();
+
+        if (matchingArticulos.Any())
+        {
+            articulos = matchingArticulos;
+        }
+        else
+        {
+
+            articulos = new List<Articulo>();
+
+        }
+
+    }
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await Search();
+        }
     }
 }

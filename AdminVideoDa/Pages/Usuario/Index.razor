@@ -11,7 +11,8 @@
         <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="goAdd" />
         <MudSpacer />
         <MudIconButton Icon="@Icons.Material.Filled.Search" Edge="Edge.Start" OnClick="Search" Style="margin-top:5px" />
-        <MudTextField @bind-Value="searchText" Placeholder="Search" Adornment="Adornment.Start"></MudTextField>
+        <MudTextField @bind-Value="searchText" Placeholder="Search" Adornment="Adornment.Start" @onkeydown="HandleKeyPress"></MudTextField>
+      
     </ToolBarContent>
     <HeaderContent>
         <MudTh>Id</MudTh>
@@ -49,27 +50,70 @@
     <PagerContent>
         <MudTablePager />
     </PagerContent>
+    
 </MudTable>
+
 
 @code {
     private IEnumerable<Usuario> usuarios = new List<Usuario>();
     private IEnumerable<Rol>? roles = new List<Rol>();
     private string searchText = "";
+
     private Usuario usuario = new Usuario();
+
 
     protected override async Task OnInitializedAsync()
     {
-        httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", await _localStorageService.GetItemAsync<string>("token"));
-        await getAll();
-        await getRoles();
+        try
+        {
+            httpClient.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", await _localStorageService.GetItemAsync<string>("token"));
+
+            await getAll();
+            await getRoles();
+            
+        }
+        catch
+        {
+
+        }
     }
 
     private async Task Search()
     {
-        var httpResponse = await httpClient.PostAsJsonAsync("usuario/buscar", usuario);
+        var SearchCriteria = new
+        {
+            Nombre = searchText,
+            Apellido =searchText,
+            Login=searchText
+        };
+        var httpResponse = await httpClient.PostAsJsonAsync("usuario/buscar", SearchCriteria);
         string respString = await httpResponse.Content.ReadAsStringAsync();
-        usuarios = JsonSerializer.Deserialize<IEnumerable<Usuario>>(respString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        var allUsers = JsonSerializer.Deserialize<IEnumerable<Usuario>>(respString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        var matchingUsers = allUsers
+             .Where(c => c.Nombre.Contains(searchText, StringComparison.OrdinalIgnoreCase) || c.Apellido.Contains(searchText, StringComparison.OrdinalIgnoreCase) || c.Login.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+            .Take(5)
+            .ToList();
+
+        if (matchingUsers.Any())
+        {
+            usuarios = matchingUsers;
+        }
+        else
+        {
+
+            usuarios = new List<Usuario>();
+
+        }
+        
+    }
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await Search();
+        }
     }
     private async Task getAll()
     {
@@ -85,4 +129,5 @@
     {
         NavigationManager.NavigateTo("usuario/agregar");
     }
+   
 }

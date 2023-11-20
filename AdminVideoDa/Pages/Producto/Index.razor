@@ -10,7 +10,8 @@
     <ToolBarContent>
         <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="goAdd" />
         <MudSpacer />
-        <MudTextField @bind-Value="searchText" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        <MudIconButton Icon="@Icons.Material.Filled.Search" Edge="Edge.Start" OnClick="Search" Style="margin-top:5px" />
+        <MudTextField @bind-Value="searchText" Placeholder="Search" Adornment="Adornment.Start" @onkeydown="HandleKeyPress"></MudTextField>
     </ToolBarContent>
     <HeaderContent>
         <MudTh>Id</MudTh>
@@ -79,5 +80,42 @@
     private void goAdd()
     {
         NavigationManager.NavigateTo("producto/agregar");
+    }
+    private async Task Search()
+    {
+        var SearchCriteria = new
+        {
+            Nombre = searchText,
+            Descripcion = searchText,
+            Cantidad = searchText,
+            Precio =searchText , 
+        };
+        var httpResponse = await httpClient.PostAsJsonAsync("producto/buscar", SearchCriteria);
+        string respString = await httpResponse.Content.ReadAsStringAsync();
+        var allProducts = JsonSerializer.Deserialize<IEnumerable<Producto>>(respString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        var matchingProducts = allProducts
+             .Where(c => c.Nombre.Contains(searchText, StringComparison.OrdinalIgnoreCase) || c.Descripcion.Contains(searchText, StringComparison.OrdinalIgnoreCase) || c.Cantidad.Contains(searchText, StringComparison.OrdinalIgnoreCase) || c.Precio.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+            .Take(5)
+            .ToList();
+
+        if (matchingProducts.Any())
+        {
+            productos = matchingProducts;
+        }
+        else
+        {
+
+            productos = new List<Producto>();
+
+        }
+
+    }
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await Search();
+        }
     }
 }

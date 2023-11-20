@@ -9,12 +9,12 @@
     <ToolBarContent>
         <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="goAdd" />
         <MudSpacer />
-        <MudTextField @bind-Value="searchText" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        <MudIconButton Icon="@Icons.Material.Filled.Search" Edge="Edge.Start" OnClick="Search" Style="margin-top:5px" />
+        <MudTextField @bind-Value="searchText" Placeholder="Search" Adornment="Adornment.Start" @onkeydown="HandleKeyPress"></MudTextField>
     </ToolBarContent>
     <HeaderContent>
         <MudTh>Id</MudTh>
         <MudTh>Nombre</MudTh>
-        @* <MudTh>Descripcion</MudTh> *@
         <MudTh>Serie</MudTh>
         <MudTh>Fabricante</MudTh>
         <MudTh>Precio</MudTh>
@@ -23,7 +23,6 @@
     <RowTemplate>
         <MudTd DataLabel="Id">@context.Id</MudTd>
         <MudTd DataLabel="Nombre">@context.Nombre</MudTd>
-       @*  <MudTd DataLabel="Descripcion">@context.Descripcion</MudTd> *@
         <MudTd DataLabel="Serie">@context.Serie</MudTd>
         <MudTd DataLabel="Fabricante">@context.Fabricante</MudTd>
         <MudTd DataLabel="Precio">@context.Precio</MudTd>
@@ -60,5 +59,45 @@
     private void goAdd()
     {
         NavigationManager.NavigateTo("consola/agregar");
+    }
+    private async Task Search()
+    {
+        var SearchCriteria = new
+        {
+            Nombre = searchText,
+            Descripcion = searchText,
+            Serie = searchText,
+            Fabricante = searchText,
+            Precio = searchText,
+            AñodeLanzamiento = searchText,
+        };
+        var httpResponse = await httpClient.PostAsJsonAsync("consola/buscar", SearchCriteria);
+        string respString = await httpResponse.Content.ReadAsStringAsync();
+        var allConsoles = JsonSerializer.Deserialize<IEnumerable<Consola>>(respString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        var matchingConsoles = allConsoles
+             .Where(c => c.Nombre.Contains(searchText, StringComparison.OrdinalIgnoreCase) || c.Descripcion.Contains(searchText, StringComparison.OrdinalIgnoreCase) || c.Serie.Contains(searchText, StringComparison.OrdinalIgnoreCase) || c.Precio.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+             || c.Fabricante.Contains(searchText, StringComparison.OrdinalIgnoreCase) || c.AñodeLanzamiento.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+            .Take(5)
+            .ToList();
+
+        if (matchingConsoles.Any())
+        {
+            consolas = matchingConsoles;
+        }
+        else
+        {
+
+            consolas = new List<Consola>();
+
+        }
+
+    }
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await Search();
+        }
     }
 }

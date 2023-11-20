@@ -9,7 +9,8 @@
     <ToolBarContent>
         <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="goAdd" />
         <MudSpacer />
-        <MudTextField @bind-Value="searchText" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        <MudIconButton Icon="@Icons.Material.Filled.Search" Edge="Edge.Start" OnClick="Search" Style="margin-top:5px" />
+        <MudTextField @bind-Value="searchText" Placeholder="Search" Adornment="Adornment.Start" @onkeydown="HandleKeyPress"></MudTextField>
     </ToolBarContent>
     <HeaderContent>
         <MudTh>Id</MudTh>
@@ -67,5 +68,49 @@
     private void goAdd()
     {
         NavigationManager.NavigateTo("empleado/agregar");
+    }
+    private async Task Search()
+    {
+        var SearchCriteria = new
+        {
+            Nombre = searchText,
+            Apellido = searchText,
+            Edad = searchText,
+            Telefono = searchText,
+            Dui = searchText,
+            Correo = searchText,
+            Direccion = searchText,
+            Departamento = searchText,
+
+        };
+        var httpResponse = await httpClient.PostAsJsonAsync("empleado/buscar", SearchCriteria);
+        string respString = await httpResponse.Content.ReadAsStringAsync();
+        var allEmployees = JsonSerializer.Deserialize<IEnumerable<Empleado>>(respString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        var matchingEmployees = allEmployees
+             .Where(c => c.Nombre.Contains(searchText, StringComparison.OrdinalIgnoreCase) || c.Apellido.Contains(searchText, StringComparison.OrdinalIgnoreCase) || c.Edad.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+             || c.Telefono.Contains(searchText, StringComparison.OrdinalIgnoreCase) || c.Dui.Contains(searchText, StringComparison.OrdinalIgnoreCase) || c.Correo.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+             || c.Direccion.Contains(searchText, StringComparison.OrdinalIgnoreCase) || c.Departamento.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+            .Take(5)
+            .ToList();
+
+        if (matchingEmployees.Any())
+        {
+            empleados = matchingEmployees;
+        }
+        else
+        {
+
+            empleados = new List<Empleado>();
+
+        }
+
+    }
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await Search();
+        }
     }
 }
